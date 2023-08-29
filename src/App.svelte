@@ -176,10 +176,12 @@ Arbeider...
     display: flex;   
     gap: 7.5px;
 }
+.name {
+    width: 30px;
+}
 .bars {
     position: relative;
     height: 20px;
-    background: #eee;
     flex: 1;
 }
 .bars > div {
