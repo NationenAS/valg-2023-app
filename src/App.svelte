@@ -21,11 +21,17 @@ let config = {
     view: "",
     length: 10
 }
+var dateOptions = {
+    year: "numeric",
+    month: "short",
+    day: "numeric"
+};
 let partyStack = []
 let output = []
 let working = false
 let mounted = false
 let max
+let expandInfo
 
 function mount(d) {
     data = d
@@ -61,6 +67,7 @@ function mount(d) {
 }
 
 function update(config) {
+    expandInfo = undefined
     console.log("Config:", config)
     if (!config.view && !config.party) return
     // Base
@@ -117,6 +124,14 @@ function getColor(id) {
     return parties.find(p => p.id == id).color
 }
 
+function expand(i) {
+    if (expandInfo && i == expandInfo.i) expandInfo = undefined
+    else {
+        expandInfo = output[i].meta
+        expandInfo.i = i
+    }
+}
+
 </script>
 
 <div class=nav>
@@ -134,7 +149,9 @@ function getColor(id) {
         {/each}
     </select>
     {#if (config.view == "mostProgress" || config.view == "mostRegress") && config.party != ""}
-    <div class=info>{parties.find(p => p.id == config.party).name} har {config.view == "mostProgress" ? "framgang" : "tilbakegang"} i {output.length} kommuner.</div>
+    <div class=info>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"><circle cx="25" cy="25" r="25" fill="#fcda51"></circle><circle cx="25" cy="14" r="3"></circle><rect x="22.5" y="20" width="5" height="18"></rect></svg>
+        {parties.find(p => p.id == config.party).name} har {config.view == "mostProgress" ? "framgang" : "tilbakegang"} i {output.length} kommuner.</div>
     {/if}
 </div>
 
@@ -142,7 +159,7 @@ function getColor(id) {
 <div class="list">
     {#each output as item, i}
     {#if i < config.length}
-    <div>
+    <div on:click={() => {expand(i)}}>
         <div class=municipality>{item.kommune}</div>
         <div class=content>
             <div class=name>{item.parti}</div>
@@ -154,11 +171,17 @@ function getColor(id) {
             <div class=valg-2019>{item.valg.toLocaleString("nb-NO", {maximumFractionDigits: 1})}%</div>
             <div class=diff class:negative={item.endring < 0}>{item.endring > 0 ? "+" : ""}{item.endring.toLocaleString("nb-NO", {maximumFractionDigits: 1})}</div>
         </div>
+        {#if expandInfo && expandInfo.i == i}
+        <div class=expandInfo>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"><circle cx="25" cy="25" r="25" fill="#fcda51"></circle><circle cx="25" cy="14" r="3"></circle><rect x="22.5" y="20" width="5" height="18"></rect></svg>
+            <div>Publisert {new Date(expandInfo.dato).toLocaleString("nb-NO", dateOptions)} i <a href="{expandInfo.url}" target="_blank">{expandInfo.kilde}</a>. Utført av {expandInfo.institutt} med {expandInfo.spurte} deltakere.</div>
+        </div>
+        {/if}
     </div>
     {/if}
     {/each}
 </div>
-<div class=credits>Basert på lokale målinger for {data.data.length} av 357 kommuner. Hentet {new Date(data.time).toLocaleString("nb-NO")} fra <a href="https://pollofpolls.no">pollofpolls.no</a>.</div>
+<div class=credits>Basert på lokale målinger for {data.data.length} av 357 kommuner. Hentet {new Date(data.time).toLocaleString("nb-NO", dateOptions)} fra <a href="https://pollofpolls.no">pollofpolls.no</a>. </div>
 {:else if working}
 <div class=notice>
 Arbeider...
@@ -168,6 +191,7 @@ Arbeider...
     <h3>Velg ovenfor ☝️</h3>
     <p>Denne oversikten bygger på meningsmålinger gjort på <strong>kommunenivå</strong> siden 1. juli 2023.</p>
     <p>Ikke alle aviser gjør egne, lokale målinger, og nasjonale eller fylkesvise målinger er ikke presise nok til å si noe om hvordan folk vil stemme i hver kommune.</p>
+    <p>Dersom det finnes flere målinger i en kommune, er det den siste målingen som vises.</p>
 </div>
 {:else}
 <div class=notice>
@@ -177,6 +201,12 @@ Arbeider...
 {/if}
 
 <style>
+a {
+    color: black;
+}
+svg {
+    width: 20px;
+}
 .nav {
     display: flex;
     flex-wrap: wrap;
@@ -187,13 +217,18 @@ Arbeider...
 select {
     padding: 10px 20px;
     border-radius: 99px;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 500;
+    outline: none;
+    background-color: transparent;
 }
 .info {
     padding: 10px 20px;
     border-radius: 99px;
     background: #eee;
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }
 .notice {
     margin: 25px auto;
@@ -203,8 +238,11 @@ select {
 .list {
     display: flex;
     flex-direction: column;
-    gap: 7.5px;
+    gap: 8px;
     margin-block: 20px;
+}
+.list > div {
+    cursor: help;
 }
 .municipality {
     font-weight: bold;
@@ -213,6 +251,7 @@ select {
     display: flex;   
     gap: 10px;
     align-items: center;
+    margin-top: 4px;
 }
 .name {
     width: 30px;
@@ -227,13 +266,15 @@ select {
     left: 0;
     height: 60%;
     background: var(--color);
+    border-bottom-right-radius: 99px;
+    border-top-right-radius: 99px;
 }
 .bars > div:first-child {
     top: 0;
 }
 .bars > div:last-child {
     bottom: 0;
-    opacity: .45
+    opacity: .4
 }
 .latest,
 .valg-2019,
@@ -254,7 +295,43 @@ select {
 .diff.negative {
     color: red;
 }
+.list > div:first-child .latest,
+.list > div:first-child .valg-2019,
+.list > div:first-child .diff {
+    position: relative;
+}
+.list > div:first-child .latest:before,
+.list > div:first-child .valg-2019:before,
+.list > div:first-child .diff:before {
+    position: absolute;
+    top: -30px;
+    right: 0;
+    content: "Siste";
+    font-size: 13px;
+    font-weight: normal;
+}
+.list > div:first-child .valg-2019:before {
+    content: "2019";
+}
+.list > div:first-child .diff:before {
+    content: "+/-";
+    color: black;
+}
+.expandInfo {
+    font-size: .9em;
+    margin-block: 10px;
+    padding: 8px 15px;
+    background: #eee;
+    border-radius: 99px;
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+}
+.expandInfo svg {
+    width: 18px;
+}
 .credits {
     font-size: .9em;
+    color: #666;
 }
 </style>
