@@ -209,7 +209,7 @@ Arbeider...
 </div>
 {:else}
 <div class=notice>
-    Fant ingen partier.
+    Ingen partier/kommuner.
 </div>
 {/if}
 
