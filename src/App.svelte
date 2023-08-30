@@ -13,7 +13,7 @@ const parties = [
     { id: "KrF", color: "#fcb211", name: "Kristelig Folkeparti"},
     { id: "V", color: "#006666", name: "Venstre"},
     { id: "Frp", color: "#003955", name: "Fremskrittspartiet"},
-    { id: "A", color: "#aaaaaa", name: "Andre"},
+    { id: "A", color: "#aaaaaa", name: "Andre partier"},
 ]
 let data = {}
 let config = {
@@ -138,7 +138,15 @@ function reformatString(string) {
     .replace("Ã¦", "æ")
 }
 
+
 </script>
+
+
+<svelte:head>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="true">
+	<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@200;400;500;700&display=swap" rel="stylesheet">
+</svelte:head>
 
 <div class=nav>
     <select class:active={config.view} name="view" bind:value={config.view}>
@@ -165,7 +173,7 @@ function reformatString(string) {
 <div class="list">
     {#each output as item, i}
     {#if i < config.length}
-    <div on:click={() => {expand(i)}}>
+    <div on:click={() => {expand(i)}} on:keypress={() => {expand(i)}}>
         <div class=municipality>{item.kommune}</div>
         <div class=content>
             <div class=name>{item.parti}</div>
@@ -203,7 +211,6 @@ Arbeider...
 <div class=notice>
     Fant ingen partier.
 </div>
-
 {/if}
 
 <style>
@@ -261,7 +268,7 @@ select {
     margin-top: 4px;
 }
 .name {
-    width: 30px;
+    width: 35px;
 }
 .bars {
     position: relative;
