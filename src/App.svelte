@@ -142,11 +142,11 @@ function reformatString(string) {
 
 <div class=nav>
     <select class:active={config.view} name="view" bind:value={config.view}>
-        <option value="">Velg målemetode</option>
-        <option value="best">Størst oppslutning for</option>
-        <option value="mostProgress">Størst framgang for</option>
-        <option value="mostRegress">Størst tilbakegang for</option>
-        <option value="majority">Flertall for</option>
+        <option value="">Velg liste</option>
+        <option value="best">🏆 Størst oppslutning for</option>
+        <option value="mostProgress">📈 Størst framgang for</option>
+        <option value="mostRegress">📉 Størst tilbakegang for</option>
+        <option value="majority">⚖️ Flertall for</option>
     </select>
     <select class:active={config.party} disabled={config.view == ""} name="party" bind:value={config.party}>
         <option value="">Alle partier</option>
