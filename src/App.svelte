@@ -206,6 +206,7 @@ a {
 }
 svg {
     width: 20px;
+    min-width: 20px;
 }
 .nav {
     display: flex;
@@ -320,15 +321,12 @@ select {
 .expandInfo {
     font-size: .9em;
     margin-block: 10px;
-    padding: 8px 15px;
+    padding: 10px 20px;
     background: #eee;
     border-radius: 99px;
     display: flex;
     justify-content: flex-start;
     gap: 10px;
-}
-.expandInfo svg {
-    width: 18px;
 }
 .credits {
     font-size: .9em;
