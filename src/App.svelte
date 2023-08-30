@@ -119,11 +119,6 @@ onMount(() => {
 
 $: if(mounted) update(config)
 
-// Helpers
-function getColor(id) {
-    return parties.find(p => p.id == id).color
-}
-
 function expand(i) {
     if (expandInfo && i == expandInfo.i) expandInfo = undefined
     else {
@@ -132,15 +127,26 @@ function expand(i) {
     }
 }
 
+// Helpers
+function getColor(id) {
+    return parties.find(p => p.id == id).color
+}
+function reformatString(string) {
+    return string
+    .replace("Ã¸", "ø")
+    .replace("Ã¥", "å")
+    .replace("Ã¦", "æ")
+}
+
 </script>
 
 <div class=nav>
     <select class:active={config.view} name="view" bind:value={config.view}>
         <option value="">Velg målemetode</option>
-        <option value="best">Størst oppslutning for ...</option>
-        <option value="mostProgress">Størst framgang for ...</option>
-        <option value="mostRegress">Størst tilbakegang for ...</option>
-        <option value="majority">Flertall for ...</option>
+        <option value="best">Størst oppslutning for</option>
+        <option value="mostProgress">Størst framgang for</option>
+        <option value="mostRegress">Størst tilbakegang for</option>
+        <option value="majority">Flertall for</option>
     </select>
     <select class:active={config.party} disabled={config.view == ""} name="party" bind:value={config.party}>
         <option value="">Alle partier</option>
@@ -174,7 +180,7 @@ function expand(i) {
         {#if expandInfo && expandInfo.i == i}
         <div class=expandInfo>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"><circle cx="25" cy="25" r="25" fill="#fcda51"></circle><circle cx="25" cy="14" r="3"></circle><rect x="22.5" y="20" width="5" height="18"></rect></svg>
-            <div>Publisert {new Date(expandInfo.dato).toLocaleString("nb-NO", dateOptions)} i <a href="{expandInfo.url}" target="_blank">{expandInfo.kilde}</a>. Utført av {expandInfo.institutt} med {expandInfo.spurte} deltakere.</div>
+            <div>Publisert {new Date(expandInfo.dato).toLocaleString("nb-NO", dateOptions)} i <a href="{expandInfo.url}" target="_blank">{reformatString(expandInfo.kilde)}</a>. Utført av {expandInfo.institutt} med {expandInfo.spurte} deltakere.</div>
         </div>
         {/if}
     </div>
@@ -324,7 +330,7 @@ select {
     padding: 10px 20px;
     background: #eee;
     border-radius: 99px;
-    display: flex;
+    display: inline-flex;
     justify-content: flex-start;
     gap: 10px;
 }
