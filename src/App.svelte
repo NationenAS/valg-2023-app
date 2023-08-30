@@ -4,21 +4,21 @@ import valg2019 from "./valg-2019.json"
 import conversion from "./conversion.json"
 
 const parties = [
-    { id: "Ap", color: "#e4002b", name: "Arbeiderpartiet"},
-    { id: "H", color: "#00458a", name: "Høyre"},
+    { id: "Ap", color: "#d70926", name: "Arbeiderpartiet"},
+    { id: "H", color: "#0065f1", name: "Høyre"},
     { id: "R", color: "#630000", name: "Rødt"},
     { id: "SV", color: "#d94abf", name: "Sosialistisk Venstreparti"},
-    { id: "Sp", color: "#69be28", name: "Senterpartiet"},
-    { id: "MDG", color: "#008241", name: "Miljøpartiet De Grønne"},
+    { id: "Sp", color: "#00843d", name: "Senterpartiet"},
+    { id: "MDG", color: "#4d7e00", name: "Miljøpartiet De Grønne"},
     { id: "KrF", color: "#fcb211", name: "Kristelig Folkeparti"},
     { id: "V", color: "#006666", name: "Venstre"},
-    { id: "Frp", color: "#22245d", name: "Fremskrittspartiet"},
-    { id: "A", color: "#cccccc", name: "Andre"},
+    { id: "Frp", color: "#003955", name: "Fremskrittspartiet"},
+    { id: "A", color: "#aaaaaa", name: "Andre"},
 ]
 let data = {}
 let config = {
     party: "",
-    view: "best",
+    view: "",
     length: 10
 }
 let partyStack = []
@@ -54,6 +54,7 @@ function mount(d) {
                 endring: kommune2019 ? kommune.partier[parti] - kommune2019[parti] : false
             })
         }
+
     }
     working = false
     mounted = true
@@ -122,8 +123,8 @@ function getColor(id) {
     <select class:active={config.view} name="view" bind:value={config.view}>
         <option value="">Velg målemetode</option>
         <option value="best">Størst oppslutning for ...</option>
-        <option value="mostProgress">Mest framgang for ...</option>
-        <option value="mostRegress">Mest tilbakegang for ...</option>
+        <option value="mostProgress">Størst framgang for ...</option>
+        <option value="mostRegress">Størst tilbakegang for ...</option>
         <option value="majority">Flertall for ...</option>
     </select>
     <select class:active={config.party} disabled={config.view == ""} name="party" bind:value={config.party}>
@@ -132,6 +133,9 @@ function getColor(id) {
         <option value="{party.id}">{party.name}</option>
         {/each}
     </select>
+    {#if (config.view == "mostProgress" || config.view == "mostRegress") && config.party != ""}
+    <div class=info>{parties.find(p => p.id == config.party).name} har {config.view == "mostProgress" ? "framgang" : "tilbakegang"} i {output.length} kommuner.</div>
+    {/if}
 </div>
 
 {#if output.length > 0}
@@ -161,7 +165,9 @@ Arbeider...
 </div>
 {:else if !config.view && !config.party}
 <div class=notice>
-    Velg ovenfor ☝️
+    <h3>Velg ovenfor ☝️</h3>
+    <p>Denne oversikten bygger på meningsmålinger gjort på <strong>kommunenivå</strong> siden 1. juli 2023.</p>
+    <p>Ikke alle aviser gjør egne, lokale målinger, og nasjonale eller fylkesvise målinger er ikke presise nok til å si noe om hvordan folk vil stemme i hver kommune.</p>
 </div>
 {:else}
 <div class=notice>
@@ -171,14 +177,28 @@ Arbeider...
 {/if}
 
 <style>
+.nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
 select {
-    padding: 5px 10px;
+    padding: 10px 20px;
     border-radius: 99px;
     font-size: 18px;
     font-weight: 500;
 }
+.info {
+    padding: 10px 20px;
+    border-radius: 99px;
+    background: #eee;
+}
 .notice {
-    margin-block: 10px;
+    margin: 25px auto;
+    width: 80%;
+    text-align: center;
 }
 .list {
     display: flex;
@@ -192,6 +212,7 @@ select {
 .content {
     display: flex;   
     gap: 10px;
+    align-items: center;
 }
 .name {
     width: 30px;
