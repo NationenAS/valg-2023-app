@@ -16,10 +16,12 @@ const parties = [
     { id: "A", color: "#aaaaaa", name: "Andre partier"},
 ]
 let data = {}
+let count
+$: if(data.data) count = data.data.length
 let config = {
     party: "",
     view: "",
-    length: 10
+    length: 100
 }
 var dateOptions = {
     year: "numeric",
@@ -76,14 +78,14 @@ function update(config) {
     // Most progress
     if (config.view == "mostProgress") {
         output = output
-        .filter(a => a.valg != false)
+        // .filter(a => a.valg != false)
         .filter(a => a.endring > 0)
         .sort((a,b) => b.endring - a.endring)
     }
     // Most regress
     else if (config.view == "mostRegress") {
         output = output
-        .filter(a => a.valg != false)
+        // .filter(a => a.valg != false)
         .filter(a => a.endring < 0)
         .sort((a,b) => a.endring - b.endring)
     }
@@ -140,73 +142,81 @@ function reformatString(string) {
 
 
 </script>
-
-<div class=nav>
-    <select class:active={config.view} name="view" bind:value={config.view}>
-        <option value="">Velg liste</option>
-        <option value="best">🏆 Størst oppslutning for</option>
-        <option value="mostProgress">📈 Størst framgang for</option>
-        <option value="mostRegress">📉 Størst tilbakegang for</option>
-        <option value="majority">⚖️ Flertall for</option>
-    </select>
-    <select class:active={config.party} disabled={config.view == ""} name="party" bind:value={config.party}>
-        <option value="">Alle partier</option>
-        {#each parties as party}
-        <option value="{party.id}">{party.name}</option>
-        {/each}
-    </select>
-    {#if (config.view == "mostProgress" || config.view == "mostRegress") && config.party != ""}
-    <div class=info>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"><circle cx="25" cy="25" r="25" fill="#fcda51"></circle><circle cx="25" cy="14" r="3"></circle><rect x="22.5" y="20" width="5" height="18"></rect></svg>
-        {parties.find(p => p.id == config.party).name} har {config.view == "mostProgress" ? "framgang" : "tilbakegang"} i {output.length} kommuner.</div>
-    {/if}
-</div>
-
-{#if output.length > 0}
-<div class="list">
-    {#each output as item, i}
-    {#if i < config.length}
-    <div on:click={() => {expand(i)}} on:keypress={() => {expand(i)}}>
-        <div class=municipality>{item.kommune}</div>
-        <div class=content>
-            <div class=name>{item.parti}</div>
-            <div class=bars style="--color: {getColor(item.parti)};">
-                <div style="width:{item.siste / max * 98}%"></div>
-                <div style="width:{item.valg / max * 98}%"></div>
-            </div>
-            <div class=latest>{item.siste.toLocaleString("nb-NO", {maximumFractionDigits: 1})}%</div>
-            <div class=valg-2019>{item.valg.toLocaleString("nb-NO", {maximumFractionDigits: 1})}%</div>
-            <div class=diff class:negative={item.endring < 0}>{item.endring > 0 ? "+" : ""}{item.endring.toLocaleString("nb-NO", {maximumFractionDigits: 1})}</div>
-        </div>
-        {#if expandInfo && expandInfo.i == i}
-        <div class=expandInfo>
+<div class=container>
+    <div class=nav>
+        <select class:active={config.view} name="view" bind:value={config.view}>
+            <option value="">Velg liste</option>
+            <option value="best">🏆 Størst oppslutning blant</option>
+            <option value="mostProgress">📈 Størst framgang blant</option>
+            <option value="mostRegress">📉 Størst tilbakegang blant</option>
+            <option value="majority">⚖️ Flertall for</option>
+        </select>
+        <select class:active={config.party} disabled={config.view == ""} name="party" bind:value={config.party}>
+            <option value="">Alle partier</option>
+            {#each parties as party}
+            <option value="{party.id}">{party.name}</option>
+            {/each}
+        </select>
+        {#if (config.view == "mostProgress" || config.view == "mostRegress") && config.party != ""}
+        <div class=info>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"><circle cx="25" cy="25" r="25" fill="#fcda51"></circle><circle cx="25" cy="14" r="3"></circle><rect x="22.5" y="20" width="5" height="18"></rect></svg>
-            <div>Publisert {new Date(expandInfo.dato).toLocaleString("nb-NO", dateOptions)} i <a href="{expandInfo.url}" target="_blank">{reformatString(expandInfo.kilde)}</a>. Utført av {expandInfo.institutt} med {expandInfo.spurte} deltakere.</div>
-        </div>
+            {parties.find(p => p.id == config.party).name} har {config.view == "mostProgress" ? "framgang" : "tilbakegang"} i {output.length} kommuner.</div>
         {/if}
     </div>
+    {#if output.length > 0}
+    <div class="list">
+        {#each output as item, i}
+        {#if i < config.length}
+        <div on:click={() => {expand(i)}} on:keypress={() => {expand(i)}}>
+            <div class=municipality>{item.kommune}</div>
+            <div class=content>
+                <div class=name>{item.parti}</div>
+                <div class=bars style="--color: {getColor(item.parti)};">
+                    <div style="width:{item.siste / max * 98}%"></div>
+                    <div style="width:{item.valg / max * 98}%"></div>
+                </div>
+                <div class=latest>{item.siste.toLocaleString("nb-NO", {maximumFractionDigits: 1})}%</div>
+                <div class=valg-2019>{item.valg.toLocaleString("nb-NO", {maximumFractionDigits: 1})}%</div>
+                <div class=diff class:negative={item.endring < 0}>{item.endring > 0 ? "+" : ""}{item.endring.toLocaleString("nb-NO", {maximumFractionDigits: 1})}</div>
+            </div>
+            {#if expandInfo && expandInfo.i == i}
+            <div class=expandInfo>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"><circle cx="25" cy="25" r="25" fill="#fcda51"></circle><circle cx="25" cy="14" r="3"></circle><rect x="22.5" y="20" width="5" height="18"></rect></svg>
+                <div>Publisert {new Date(expandInfo.dato).toLocaleString("nb-NO", dateOptions)} i <a href="{expandInfo.url}" target="_blank">{reformatString(expandInfo.kilde)}</a>. Utført av {expandInfo.institutt} med {expandInfo.spurte} deltakere.</div>
+            </div>
+            {/if}
+        </div>
+        {/if}
+        {/each}
+    </div>
+    <div class=credits>Basert på lokale målinger for {data.data.length} av 357 kommuner. Hentet {new Date(data.time).toLocaleString("nb-NO", dateOptions)} fra <a href="https://pollofpolls.no">pollofpolls.no</a>. </div>
+    {:else if working}
+    <div class=notice>
+    Arbeider...
+    </div>
+    {:else if !config.view && !config.party}
+    <div class=notice>
+        <h3>Velg ovenfor ☝️</h3>
+        <p>Denne oversikten bygger på meningsmålinger gjort på <strong>kommunenivå</strong> siden 1. juli 2023.</p>
+        <p>Ikke alle aviser gjør egne, lokale målinger, og nasjonale eller fylkesvise målinger er ikke presise nok til å si noe om hvordan folk vil stemme i hver kommune.</p>
+        <p>Dersom det finnes flere målinger i en kommune, er det den siste målingen som vises.</p>
+        {#if typeof count == "number"}
+        Akkurat nå er det <strong>{count}</strong> av 357 ({(count / 357 * 100).toFixed(1)}%) kommuner i oversikten.
+        {/if}
+    </div>
+    {:else}
+    <div class=notice>
+        Ingen partier/kommuner.
+    </div>
     {/if}
-    {/each}
 </div>
-<div class=credits>Basert på lokale målinger for {data.data.length} av 357 kommuner. Hentet {new Date(data.time).toLocaleString("nb-NO", dateOptions)} fra <a href="https://pollofpolls.no">pollofpolls.no</a>. </div>
-{:else if working}
-<div class=notice>
-Arbeider...
-</div>
-{:else if !config.view && !config.party}
-<div class=notice>
-    <h3>Velg ovenfor ☝️</h3>
-    <p>Denne oversikten bygger på meningsmålinger gjort på <strong>kommunenivå</strong> siden 1. juli 2023.</p>
-    <p>Ikke alle aviser gjør egne, lokale målinger, og nasjonale eller fylkesvise målinger er ikke presise nok til å si noe om hvordan folk vil stemme i hver kommune.</p>
-    <p>Dersom det finnes flere målinger i en kommune, er det den siste målingen som vises.</p>
-</div>
-{:else}
-<div class=notice>
-    Ingen partier/kommuner.
-</div>
-{/if}
 
 <style>
+.container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
 a {
     color: black;
 }
@@ -247,6 +257,7 @@ select {
     flex-direction: column;
     gap: 8px;
     margin-block: 20px;
+    overflow-y: scroll;
 }
 .list > div {
     cursor: help;
