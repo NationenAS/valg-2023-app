@@ -1,7 +1,10 @@
 <script>
+// @ts-nocheck
+
 import { afterUpdate, onMount } from "svelte"
 import valg2019 from "./valg-2019.json"
 import conversion from "./conversion.json"
+import Map from "./Map.svelte"
 
 const parties = [
     { id: "Ap", color: "#d70926", name: "Arbeiderpartiet"},
@@ -20,6 +23,7 @@ let count
 $: if(data.data) count = data.data.length
 let config = {
     party: "",
+    mode: "list",
     view: "",
     length: 100
 }
@@ -41,28 +45,33 @@ function mount(d) {
     for (const kommune of d.data) {
         // Valgdata for kommune
         let kommune2019
-        if (valg2019.find(k => k.Id == kommune.kommuneid)) {
-            kommune2019 = valg2019.find(k => k.Id == kommune.kommuneid)
+        if (valg2019.find(k => k.Id == kommune.kommuneid)) { // Hvis gammel id, hent data
+            kommune2019 = valg2019.find(k => k.Id == kommune.kommuneid) 
         }
-        else if (conversion.find(c => c[1] == kommune.kommuneid)) {
+        else if (conversion.find(c => c[1] == kommune.kommuneid)) { // Hvis ny id, hent gammel id og hent data
             let oldId = conversion.find(c => c[1] == kommune.kommuneid)[0]
             kommune2019 = valg2019.find(k => k.Id == oldId)
         }
         else {
             console.log("Mount: Kunne ikke finne " + kommune.kommuneid)
         }
+        kommune.endring = {}
         // Legg alle forekomster av partier til partystack
         for (const parti in kommune.partier) {
             partyStack.push({
                 id: kommune.id,
                 kommune: kommune2019 ? kommune2019.Navn : false,
+                kommunenr: kommune2019 ? kommune2019.Id : kommune.kommuneid,
                 parti: parti,
                 siste: Number(kommune.partier[parti]),
                 valg: kommune2019 ? kommune2019[parti] : false,
                 endring: kommune2019 ? kommune.partier[parti] - kommune2019[parti] : false
             })
+            kommune.endring[parti] = kommune2019 ? (kommune.partier[parti] - kommune2019[parti]).toFixed(2) : false
         }
-
+        // Legg til kommuneinfo i data
+        kommune.navn = kommune2019 ? kommune2019.Navn : ""
+        kommune.gammelid = kommune2019 ? kommune2019.Id : kommune.kommuneid
     }
     working = false
     mounted = true
@@ -157,16 +166,21 @@ function reformatString(string) {
             <option value="{party.id}">{party.name}</option>
             {/each}
         </select>
+        {#if config.view}
+        <div class=toggle-map on:click={() => {config.mode = config.mode == "list" ? "map" : "list"}} on:keypress={() => {config.mode = config.mode == "list" ? "map" : "list"}} role=button tabindex=0>Vis {config.mode == "list" ? "kart" : "liste"}</div>
+        {/if}
         {#if (config.view == "mostProgress" || config.view == "mostRegress") && config.party != ""}
         <div class=info>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"><circle cx="25" cy="25" r="25" fill="#fcda51"></circle><circle cx="25" cy="14" r="3"></circle><rect x="22.5" y="20" width="5" height="18"></rect></svg>
             {parties.find(p => p.id == config.party).name} har {config.view == "mostProgress" ? "framgang" : "tilbakegang"} i {output.length} kommuner.</div>
         {/if}
     </div>
-    {#if output.length > 0}
+    {#if output.length > 0 && config.view}
+    {#if config.mode == "list"}
     <div class="list">
         {#each output as item, i}
         {#if i < config.length}
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div on:click={() => {expand(i)}} on:keypress={() => {expand(i)}}>
             <div class=municipality>{item.kommune}</div>
             <div class=content>
@@ -189,12 +203,15 @@ function reformatString(string) {
         {/if}
         {/each}
     </div>
+    {:else if config.mode == "map"}
+    <Map data={data.data} config={config} parties={parties} output={output} />
+    {/if}
     <div class=credits>Basert på lokale målinger for {data.data.length} av 357 kommuner. Hentet {new Date(data.time).toLocaleString("nb-NO", dateOptions)} fra <a href="https://pollofpolls.no">pollofpolls.no</a>. </div>
     {:else if working}
     <div class=notice>
     Arbeider...
     </div>
-    {:else if !config.view && !config.party}
+    {:else if !config.view}
     <div class=notice>
         <h3>Velg ovenfor ☝️</h3>
         <p>Denne oversikten bygger på meningsmålinger gjort på <strong>kommunenivå</strong> siden 1. juli 2023.</p>
@@ -238,6 +255,14 @@ select {
     font-weight: 500;
     outline: none;
     background-color: transparent;
+    cursor: pointer;
+}
+.toggle-map {
+    padding: 10px 20px;
+    border-radius: 99px;
+    font-weight: 500;
+    border: 1px solid #666;
+    cursor: pointer;
 }
 .info {
     padding: 10px 20px;
@@ -256,7 +281,7 @@ select {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-block: 20px;
+    margin-block: 20px 10px;
     overflow-y: scroll;
 }
 .list > div {
