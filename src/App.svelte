@@ -16,7 +16,7 @@ const parties = [
     { id: "KrF", color: "#fcb211", name: "Kristelig Folkeparti"},
     { id: "V", color: "#006666", name: "Venstre"},
     { id: "Frp", color: "#003955", name: "Fremskrittspartiet"},
-    { id: "A", color: "#aaaaaa", name: "Andre partier"},
+    { id: "A", color: "#78379d", name: "Andre partier"},
 ]
 let data = {}
 let count
@@ -154,7 +154,7 @@ function reformatString(string) {
 <div class=container>
     <div class=nav>
         <select class:active={config.view} name="view" bind:value={config.view}>
-            <option value="">Velg liste</option>
+            <option value="">Velg målemetode</option>
             <option value="best">🏆 Størst oppslutning blant</option>
             <option value="mostProgress">📈 Størst framgang blant</option>
             <option value="mostRegress">📉 Størst tilbakegang blant</option>

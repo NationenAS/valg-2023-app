@@ -30,7 +30,7 @@ $: getStyle = function(id) {
             return `fill: ${color};`
         }
         if (config.view == "mostProgress" && config.party) {
-            let color = kommune.endring[config.party] > 0 ? parties.find(p => p.id == config.party).color : "#999"
+            let color = kommune.endring[config.party] > 0 ? parties.find(p => p.id == config.party).color : "#ccc"
             return `fill: ${color};`
         }
         if (config.view == "mostRegress" && !config.party) {
@@ -39,7 +39,7 @@ $: getStyle = function(id) {
             return `fill: ${color};`
         }
         if (config.view == "mostRegress" && config.party) {
-            let color = kommune.endring[config.party] < 0 ? parties.find(p => p.id == config.party).color : "#999"
+            let color = kommune.endring[config.party] < 0 ? parties.find(p => p.id == config.party).color : "#ccc"
             return `fill: ${color};`
         }
     }
@@ -66,6 +66,6 @@ svg {
 path {
     stroke: #979797;
     stroke-width: .5px;
-    fill: #eee;
+    fill: white;
 }
 </style>
